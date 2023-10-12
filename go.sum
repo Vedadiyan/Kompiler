@@ -1,0 +1,5 @@
+github.com/vedadiyan/filepack v0.0.0-20231012042352-a4e7a9d3b5cf h1:p2ElKib0Zs8wysF8xdYVNHY62UDyZ2oTgY8HkZQXWEs=
+github.com/vedadiyan/filepack v0.0.0-20231012042352-a4e7a9d3b5cf/go.mod h1:dpbjBtV8DXOzdR+F5w/ULyK37oTWCNm43LXVlRXiK1w=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
