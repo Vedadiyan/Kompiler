@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -43,42 +44,51 @@ func (kompiler Kompiler) Compile() error {
 	protogenic := os.Getenv("PROTOGENIC")
 	for serviceType, path := range kompiler.Build {
 		fmt.Println("compiling", serviceType)
-		cmd := exec.Command(protogenic, "-f", kompiler.Entry, "-t", strings.ToLower(serviceType), "-m", kompiler.Package)
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
-		err := cmd.Run()
+		{
+			cmd := exec.Command(protogenic, "-f", kompiler.Entry, "-t", strings.ToLower(serviceType), "-m", kompiler.Package)
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = os.Stdout
+			err := cmd.Run()
+			if err != nil {
+				return err
+			}
+		}
+		err := os.MkdirAll(path, os.ModePerm)
 		if err != nil {
 			return err
 		}
-		err = os.MkdirAll(path, os.ModePerm)
-		if err != nil {
-			return err
+		{
+			cmd := exec.Command("go", "mod", "tidy")
+			cmd.Dir = kompiler.Package
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = os.Stdout
+			err := cmd.Run()
+			if err != nil {
+				return err
+			}
 		}
-		cmd = exec.Command("go", "mod", "tidy")
-		cmd.Dir = kompiler.Package
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
-		err = cmd.Run()
-		if err != nil {
-			return err
+		{
+			cmd := exec.Command("go", "build", "-o", "app", fmt.Sprintf("%s/cmd", kompiler.Package))
+			cmd.Dir = kompiler.Package
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = os.Stdout
+			err := cmd.Run()
+			if err != nil {
+				return err
+			}
 		}
-		cmd = exec.Command("go", "build", "-o", "app", fmt.Sprintf("%s/cmd", kompiler.Package))
-		cmd.Dir = kompiler.Package
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
-		err = cmd.Run()
-		if err != nil {
-			return err
-		}
-		err = os.Rename("app", fmt.Sprintf("%s/app", path))
-		if err != nil {
-			return err
-		}
-		err = os.RemoveAll(strings.FieldsFunc(kompiler.Package, func(r rune) bool {
-			return r == '/' || r == '\\'
-		})[0])
-		if err != nil {
-			return err
+		os.Rename(fmt.Sprintf("%s/app", kompiler.Package), fmt.Sprintf("%s/app", path))
+		for i := 0; i <= 10; i++ {
+			err = os.RemoveAll(strings.FieldsFunc(kompiler.Package, func(r rune) bool {
+				return r == '/' || r == '\\'
+			})[0])
+			if err == nil {
+				break
+			}
+			<-time.After(time.Second * time.Duration(i))
+			if i == 10 {
+				return err
+			}
 		}
 		fmt.Println("done")
 	}
