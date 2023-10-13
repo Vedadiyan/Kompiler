@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/vedadiyan/filepack"
 	"gopkg.in/yaml.v3"
 )
 
@@ -55,8 +54,29 @@ func (kompiler Kompiler) Compile() error {
 		if err != nil {
 			return err
 		}
-
-		err = filepack.Move(kompiler.Package, path)
+		cmd = exec.Command("go", "mod", "tidy")
+		cmd.Dir = kompiler.Package
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		err = cmd.Run()
+		if err != nil {
+			return err
+		}
+		cmd = exec.Command("go", "build", "-o", "app", fmt.Sprintf("%s/cmd", kompiler.Package))
+		cmd.Dir = kompiler.Package
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		err = cmd.Run()
+		if err != nil {
+			return err
+		}
+		err = os.Rename("app", fmt.Sprintf("%s/app", path))
+		if err != nil {
+			return err
+		}
+		err = os.RemoveAll(strings.FieldsFunc(kompiler.Package, func(r rune) bool {
+			return r == '/' || r == '\\'
+		})[0])
 		if err != nil {
 			return err
 		}
