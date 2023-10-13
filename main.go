@@ -1,14 +1,23 @@
 package main
 
 import (
+	"bytes"
+	_ "embed"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"text/template"
 	"time"
 
 	"gopkg.in/yaml.v3"
+)
+
+var (
+	//go:embed dockerfile.go.tmpl
+	dockerfile         string
+	dockerfileTemplate *template.Template
 )
 
 type Kompiler struct {
@@ -16,6 +25,18 @@ type Kompiler struct {
 	Deps    []string
 	Entry   string
 	Build   map[string]string
+}
+
+type Dockerfile struct {
+	Type string
+}
+
+func init() {
+	_dockerfileTemplate, err := template.New("dockerfile").Parse(dockerfile)
+	if err != nil {
+		panic(err)
+	}
+	dockerfileTemplate = _dockerfileTemplate
 }
 
 func (kompiler Kompiler) InstallDeps() error {
@@ -76,6 +97,15 @@ func (kompiler Kompiler) Compile() error {
 			if err != nil {
 				return err
 			}
+		}
+		var buffer bytes.Buffer
+		err = dockerfileTemplate.Execute(&buffer, Dockerfile{Type: serviceType})
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(fmt.Sprintf("%s/Dockerfile", path), buffer.Bytes(), os.ModePerm)
+		if err != nil {
+			return err
 		}
 		os.Rename(fmt.Sprintf("%s/app", kompiler.Package), fmt.Sprintf("%s/app", path))
 		for i := 0; i <= 10; i++ {

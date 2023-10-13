@@ -1,0 +1,8 @@
+FROM alpine 
+COPY app /srv
+WORKDIR /srv
+RUN chmod 777 ./app 
+{{- if eq .Type "api_gateway" }}
+EXPOSE 8080
+{{- end }}
+ENTRYPOINT ./app
