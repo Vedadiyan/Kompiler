@@ -18,4 +18,3 @@ RUN chmod 777 /usr/bin/protobuf/bin/protogenic
 RUN echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > /root/.ssh/config
 RUN mkdir /build
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-ENTRYPOINT ./kompile.sh
