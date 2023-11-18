@@ -90,6 +90,7 @@ func (kompiler Kompiler) Compile() error {
 		}
 		{
 			cmd := exec.Command("go", "build", "-o", "app", fmt.Sprintf("%s/cmd", kompiler.Package))
+			cmd.Env = append(cmd.Env, "GOARCH=arm64")
 			cmd.Dir = kompiler.Package
 			cmd.Stderr = os.Stderr
 			cmd.Stdout = os.Stdout
