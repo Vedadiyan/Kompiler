@@ -64,7 +64,7 @@ func (kompiler Kompiler) InstallDeps() error {
 func (kompiler Kompiler) Compile() error {
 	protogenic := os.Getenv("PROTOGENIC")
 	for serviceType, path := range kompiler.Build {
-		fmt.Println("compiling", serviceType)
+		fmt.Println("compiling", serviceType, "for", os.Getenv("GOARCH"))
 		{
 			cmd := exec.Command(protogenic, "-f", kompiler.Entry, "-t", strings.ToLower(serviceType), "-m", kompiler.Package)
 			cmd.Stderr = os.Stderr
