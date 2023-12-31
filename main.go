@@ -23,6 +23,7 @@ var (
 type Kompiler struct {
 	Package string
 	Deps    []string
+	GoDeps  []string
 	Entry   string
 	Build   map[string]string
 }
@@ -77,6 +78,19 @@ func (kompiler Kompiler) Compile() error {
 		err := os.MkdirAll(path, os.ModePerm)
 		if err != nil {
 			return err
+		}
+		{
+			for _, deps := range kompiler.GoDeps {
+				cmd := exec.Command("go", "get", deps)
+				cmd.Env = os.Environ()
+				cmd.Dir = kompiler.Package
+				cmd.Stderr = os.Stderr
+				cmd.Stdout = os.Stdout
+				err := cmd.Run()
+				if err != nil {
+					return err
+				}
+			}
 		}
 		{
 			cmd := exec.Command("go", "mod", "tidy")
